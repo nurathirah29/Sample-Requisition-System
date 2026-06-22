@@ -17,7 +17,7 @@ SMTP_HOST = "mail.example.com"
 SMTP_PORT = 587
 SMTP_USER = "example@example.com"        
 SMTP_PASS = ""
-SYSTEM_LINK = "#"
+SYSTEM_LINK = ""
 
 
 # ─────────────────────────────────────────

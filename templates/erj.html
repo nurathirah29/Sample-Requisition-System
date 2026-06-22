@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+
+{% block sidebar_nav %}
+<a href="/erj" class="nav-a on">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+  Dashboard
+</a>
+<a href="/notifications" class="nav-a">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+  Notifications
+  {% if unread > 0 %}<span class="nav-badge">{{ unread }}</span>{% endif %}
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="topbar">
+  <div>
+    <div class="page-title">Welcome back, {{ name }}</div>
+  </div>
+  <button class="btn btn-primary"
+    onclick="initNewSamples(); document.getElementById('newOverlay').classList.add('show')">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    New Request
+  </button>
+</div>
+
+<div class="content">
+
+  <!-- Stat cards -->
+  <div class="stats" style="grid-template-columns:repeat(3,1fr)">
+    <a href="/erj?status=Open&q={{ q }}" class="scard" style="text-decoration:none">
+      <div class="scard-icon o"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+      <div class="scard-lbl">Open</div>
+      <div class="scard-val">{{ stats.Open }}</div>
+    </a>
+    <a href="/erj?status=Completed&q={{ q }}" class="scard" style="text-decoration:none">
+      <div class="scard-icon c"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <div class="scard-lbl">Completed</div>
+      <div class="scard-val">{{ stats.Completed }}</div>
+    </a>
+    <a href="/erj?status=Closed&q={{ q }}" class="scard" style="text-decoration:none">
+      <div class="scard-icon cl"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
+      <div class="scard-lbl">Closed</div>
+      <div class="scard-val">{{ stats.Closed }}</div>
+    </a>
+  </div>
+
+  <!-- Table -->
+  <div class="tcard">
+    <div class="tcard-head">
+      <div class="tcard-title">All Requests</div>
+      <div class="tcard-tools">
+        <div class="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input placeholder="Search request no, requester,customer, model…" value="{{ q }}"
+            onkeydown="if(event.key==='Enter')window.location='/erj?q='+encodeURIComponent(this.value)+'&status={{ sf }}'">
+        </div>
+        <div class="ftabs">
+          {% for s in ['all','Open','Completed','Closed'] %}
+          <a href="/erj?status={{ s }}&q={{ q }}" class="ftab {% if sf==s %}on{% endif %}">{{ s|title if s!='all' else 'All' }}</a>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    {% if rows %}
+    <div style="overflow-x:auto">
+    <table>
+      <thead><tr>
+        <th style="text-align:center">Request No.</th>
+        <th>Requester</th>
+        <th>Customer</th>
+        <th>Model</th>
+        <th>Samples</th>
+        <th>Ship To</th>
+        <th style="text-align:center">Req. Delivery</th>
+        <th style="text-align:center">Poss. Delivery</th>
+        <th style="text-align:center">Status</th>
+        <th>Actions</th>
+      </tr></thead>
+      <tbody>
+      {% for r in rows %}
+      <tr>
+        <td style="text-align:center"><span class="rno">{{ r.request_no }}</span></td>
+        <td style="font-weight:600">{{ r.requester_name or '—' }}</td>
+        <td>{{ r.customer or '—' }}</td>
+        <td>{{ r.model or '—' }}</td>
+        <td>
+          {% if r.item_count %}
+            <span style="font-size:11px;font-weight:600;color:var(--accent)">{{ r.item_count }} item{{ 's' if r.item_count > 1 else '' }}</span>
+          {% else %}
+            <span class="dc">—</span>
+          {% endif %}
+        </td>
+        <td class="dc">{{ r.ship_to or '—' }}</td>
+        <td class="dc" style="text-align:center">{{ r.request_delivery_date.strftime('%d %b %Y') if r.request_delivery_date else '—' }}</td>
+        <td style="text-align:center">
+          {% if r.possible_delivery_date %}
+            <span style="font-size:11px;font-weight:700;color:var(--green)">{{ r.possible_delivery_date.strftime('%d %b %Y') }}</span>
+          {% else %}<span class="dc">—</span>{% endif %}
+        </td>
+        <td style="text-align:center"><span class="badge b-{{ r.status|lower }}">{{ r.status }}</span></td>
+        <td>
+          <div style="display:flex;gap:5px">
+            <button class="btn btn-ghost btn-sm" onclick="openDetail({{ r.id }})">View</button>
+            {% if session.user_id == r.requester_id %}
+              {% if r.status in ['Open', 'Completed'] %}
+              <button class="btn btn-warn btn-sm" onclick="openEdit({{ r.id }},'{{ r.request_no }}')">Edit</button>
+              {% endif %}
+              {% if r.status == 'Completed' %}
+              <button class="btn btn-success btn-sm" onclick="openClose({{ r.id }},'{{ r.request_no }}')">Close</button>
+              {% endif %}
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    {% else %}
+    <div class="empty">
+      <div class="empty-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+      <h4>No requests found</h4>
+      <p>Submit a new sample request to get started.</p>
+      <button class="btn btn-primary btn-sm"
+        onclick="initNewSamples(); document.getElementById('newOverlay').classList.add('show')">New Request</button>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}
+
+
+{% block modals %}
+<!-- ═══ NEW REQUEST MODAL ════════════════════════════════════ -->
+<div class="overlay" id="newOverlay" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="modal">
+    <div class="modal-hd">
+      <div><h3>New Sample Request</h3></div>
+      <button class="modal-x" onclick="document.getElementById('newOverlay').classList.remove('show')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <form method="post" action="/submit">
+      <div class="modal-bd">
+
+        <div class="fsec">Customer & Product</div>
+        <div class="fr">
+          <div class="fg"><label>Customer <span class="req">*</span></label><input class="fc" name="customer" placeholder="e.g. Aprilia" required></div>
+          <div class="fg"><label>PIC <span class="req">*</span></label><input class="fc" name="pic" placeholder="Person-in-charge" required></div>
+        </div>
+        <div class="fr">
+          <div class="fg"><label>Model <span class="req">*</span></label><input class="fc" name="model" placeholder="e.g. P5A/B" required></div>
+          <div class="fg"><label>Mass Production at <span class="req">*</span></label><input class="fc" name="mass_prod" placeholder="e.g. ERM / ERJ / ERI" required></div>
+        </div>
+
+        <div class="fsec" style="display:flex;align-items:center;justify-content:space-between">
+          <span>Samples</span>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="addSampleRow('newSamples')">+ Add Sample</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 140px 140px 28px;gap:8px;margin-bottom:4px">
+          <span style="font-size:10px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.07em">Sample <span style="color:var(--red)">*</span><br>[Material_Size_Profile (Kisyu) Color]</span>
+          <span style="font-size:10px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.07em">Quantity <span style="color:var(--red)">*</span></span>
+          <span style="font-size:10px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.07em">Packing Opt <span style="color:var(--red)">*</span></span>
+          <span></span>
+        </div>
+        <div id="newSamples"></div>
+
+        <div class="fsec">Order Details</div>
+        <div class="fr">
+          <div class="fg"><label>Price Between ERJ and ERM <span class="req">*</span></label><input class="fc" name="price_between" placeholder="e.g. Commission / FOC" required></div>
+          <div class="fg"><label>Freight Cost Burden<span class="req">*</span></label><input class="fc" name="freight_cost" placeholder="e.g. ERM / ERJ" required></div>
+        </div>
+
+        <div class="fsec">Shipping</div>
+        <div class="fr">
+          <div class="fg"><label>Ship To <span class="req">*</span></label><input class="fc" name="ship_to" placeholder="e.g. Alpina" required></div>
+          <div class="fg"><label>Shipping Mode <span class="req">*</span></label><input class="fc" name="ship_mode" placeholder="e.g. Air / Sea / Courier" required></div>
+        </div>
+        <div class="fr">
+          <div class="fg"><label>Shipping Term <span class="req">*</span></label><input class="fc" name="ship_term" placeholder="e.g. DDU" required></div>
+          <div class="fg"><label>Request Delivery Date <span class="req">*</span></label><input class="fc" type="date" name="request_delivery_date" required></div>
+        </div>
+
+        <div class="fsec">References & Remarks</div>
+        <div class="fr">
+          <div class="fg"><label>Development Request No. (Optional)</label><input class="fc" name="dev_request_no" placeholder="e.g. DR-2025-001"></div>
+          <div class="fg">
+            <label>Inspection Report <span class="req">*</span></label>
+            <select class="fc" name="inspection_report" required>
+              <option value="" disabled selected>Select…</option>
+              <option value="Yes">Yes</option>
+              <option value="No">No</option>
+            </select>
+          </div>
+        </div>
+        <div class="fg"><label>Note (Optional)</label><textarea class="fc" name="remark" rows="2" placeholder="Additional notes…" style="resize:vertical"></textarea></div>
+
+      </div>
+      <div class="modal-ft">
+        <button type="button" class="btn btn-ghost" onclick="document.getElementById('newOverlay').classList.remove('show')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Submit Request</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══ CLOSE REQUEST MODAL ══════════════════════════════════ -->
+<div class="overlay" id="closeOverlay" onclick="if(event.target===this)closeCloseModal()">
+  <div class="modal sm">
+    <div class="modal-hd">
+      <div><h3>Close Request</h3><div class="sub" id="cl-sub"></div></div>
+      <button class="modal-x" onclick="closeCloseModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <form id="closeForm" method="post">
+      <div class="modal-bd">
+        <p style="font-size:13px;color:var(--sub);margin-bottom:14px">Are you sure you want to close this request? This action cannot be undone.</p>
+        <div class="fg">
+          <label>Closing Remark <span style="color:var(--sub);font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
+          <textarea class="fc" name="close_remark" rows="3" placeholder="e.g. Sample received and approved" style="resize:vertical"></textarea>
+        </div>
+      </div>
+      <div class="modal-ft">
+        <button type="button" class="btn btn-ghost" onclick="closeCloseModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Confirm Close</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+// ── ERJ-SPECIFIC FUNCTIONS ONLY ───────────────────────────────
+// addSampleRow, removeSampleRow, reindexRows are defined in base.html
+
+function initNewSamples() {
+  const wrap = document.getElementById('newSamples');
+  wrap.innerHTML = '';
+  addSampleRow('newSamples');
+}
+
+function openClose(id, rno) {
+  document.getElementById('cl-sub').textContent   = rno;
+  document.getElementById('closeForm').action     = '/erj/close/' + id;
+  document.getElementById('closeOverlay').classList.add('show');
+}
+
+function closeCloseModal() {
+  document.getElementById('closeOverlay').classList.remove('show');
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeCloseModal();
+});
+</script>
+{% endblock %}

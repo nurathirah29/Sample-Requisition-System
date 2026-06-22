@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sample Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --navy:#0D1F3C;
+      --navy2:#152847;
+      --accent:#3B82F6;
+      --accent-soft:rgba(59,130,246,.12);
+      --amber:#F59E0B;
+      --red:#EF4444;
+      --green:#10B981;
+      --bg:#F4F6FB;
+      --surface:#fff;
+      --border:#E5EAF2;
+      --text:#0D1F3C;
+      --sub:#64748B;
+      --sw:232px;
+      --radius:12px;
+    }
+    body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+    /* ── SIDEBAR ─────────────────── */
+    .sidebar{
+      position:fixed;inset:0 auto 0 0;width:var(--sw);
+      background:var(--navy);display:flex;flex-direction:column;z-index:50
+    }
+    .sb-logo{padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:10px}
+    .sb-icon{width:32px;height:32px;border-radius:8px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#fff;flex-shrink:0}
+    .sb-brand{font-weight:700;font-size:14px;color:#fff;line-height:1.2}
+    .sb-brand small{display:block;font-size:10px;font-weight:400;color:rgba(255,255,255,.4);letter-spacing:.05em;text-transform:uppercase}
+    .sb-nav{flex:1;padding:14px 10px;display:flex;flex-direction:column;gap:2px}
+    .sb-section{font-size:9px;font-weight:700;color:rgba(255,255,255,.3);letter-spacing:.12em;text-transform:uppercase;padding:10px 10px 5px}
+    .nav-a{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:8px;color:rgba(255,255,255,.55);font-size:13px;font-weight:500;text-decoration:none;transition:all .15s;position:relative}
+    .nav-a:hover{background:rgba(255,255,255,.06);color:#fff}
+    .nav-a.on{background:var(--accent-soft);color:var(--accent)}
+    .nav-a svg{width:17px;height:17px;flex-shrink:0;opacity:.75}
+    .nav-a.on svg{opacity:1}
+    .nav-badge{margin-left:auto;background:var(--red);color:#fff;font-size:10px;font-weight:700;border-radius:20px;padding:1px 7px}
+    .sb-foot{padding:14px 10px;border-top:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:9px}
+    .avatar{width:30px;height:30px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;color:#fff;flex-shrink:0}
+    .sb-user{flex:1;min-width:0}
+    .sb-name{font-size:12px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .sb-role{font-size:10px;color:rgba(255,255,255,.4)}
+    .logout{color:rgba(255,255,255,.35);text-decoration:none;padding:4px;border-radius:4px;transition:color .15s;flex-shrink:0;display:flex}
+    .logout:hover{color:var(--red)}
+
+    /* ── MAIN ─────────────────────── */
+    .main{margin-left:var(--sw);min-height:100vh;display:flex;flex-direction:column}
+    .topbar{padding:24px 28px 0;display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+    .page-title{font-size:22px;font-weight:800;color:var(--text)}
+    .page-sub{font-size:12px;color:var(--sub);margin-top:3px}
+    .content{padding:20px 28px 48px}
+
+    /* ── STAT CARDS ──────────────── */
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+    .scard{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;gap:10px;text-decoration:none;transition:transform .15s,box-shadow .15s;cursor:pointer}
+    .scard:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(13,31,60,.07)}
+    .scard-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center}
+    .scard-icon.p{background:rgba(245,158,11,.12);color:var(--amber)}
+    .scard-icon.o{background:rgba(59,130,246,.12);color:var(--accent)}
+    .scard-icon.c{background:rgba(16,185,129,.12);color:var(--green)}
+    .scard-icon.cl{background:rgba(100,116,139,.1);color:var(--sub)}
+    .scard-val{font-size:30px;font-weight:800;color:var(--text);line-height:1}
+    .scard-lbl{font-size:11px;font-weight:600;color:var(--sub)}
+
+    /* ── TABLE CARD ──────────────── */
+    .tcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+    .tcard-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .tcard-title{font-size:14px;font-weight:700}
+    .tcard-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .search{display:flex;align-items:center;gap:7px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:7px 11px}
+    .search input{border:none;background:transparent;font-family:inherit;font-size:12px;color:var(--text);outline:none;width:170px}
+    .search svg{color:var(--sub);flex-shrink:0;width:13px;height:13px}
+    .ftabs{display:flex;gap:3px}
+    .ftab{padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;color:var(--sub);background:none;border:1px solid transparent;cursor:pointer;text-decoration:none;transition:all .13s}
+    .ftab:hover{background:var(--bg);color:var(--text)}
+    .ftab.on{background:var(--accent-soft);color:var(--accent);border-color:rgba(59,130,246,.2)}
+    table{width:100%;border-collapse:collapse}
+    thead th{padding:10px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.07em;background:var(--bg);border-bottom:1px solid var(--border)}
+    tbody tr{border-bottom:1px solid var(--border);transition:background .1s}
+    tbody tr:last-child{border-bottom:none}
+    tbody tr:hover{background:rgba(59,130,246,.025)}
+    tbody td{padding:12px 14px;font-size:12px;vertical-align:middle}
+    .rno{font-weight:700;font-size:11px;color:var(--accent);font-family:monospace}
+    .dc{font-size:11px;color:var(--sub)}
+    .hover-row:hover { background: rgba(59,130,246,.03); }
+
+    /* ── STATUS BADGES ───────────── */
+    .badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;border-radius:20px;padding:3px 9px;white-space:nowrap}
+    .badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.7}
+    .b-pending{background:rgba(245,158,11,.12);color:#B45309}
+    .b-open{background:rgba(59,130,246,.12);color:#1D4ED8}
+    .b-completed{background:rgba(16,185,129,.12);color:#059669}
+    .b-closed{background:rgba(100,116,139,.1);color:var(--sub)}
+
+    /* ── BUTTONS ─────────────────── */
+    .btn{display:inline-flex;align-items:center;gap:5px;padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-family:inherit;font-size:12px;font-weight:600;text-decoration:none;transition:all .15s}
+    .btn-primary{background:var(--accent);color:#fff}
+    .btn-primary:hover{background:#2563EB;box-shadow:0 3px 12px rgba(59,130,246,.3)}
+    .btn-ghost{background:var(--bg);color:var(--text);border:1px solid var(--border)}
+    .btn-ghost:hover{background:var(--border)}
+    .btn-sm{padding:5px 11px;font-size:11px;border-radius:6px}
+    .btn-success{background:rgba(16,185,129,.1);color:#059669;border:1px solid rgba(16,185,129,.2)}
+    .btn-warn{background:rgba(245,158,11,.1);color:#B45309;border:1px solid rgba(245,158,11,.2)}
+
+    /* ── MODAL ───────────────────── */
+    .overlay{position:fixed;inset:0;background:rgba(13,31,60,.45);backdrop-filter:blur(3px);z-index:200;display:none;align-items:center;justify-content:center;padding:20px}
+    .overlay.show{display:flex}
+    .modal{background:var(--surface);border-radius:16px;width:100%;max-width:660px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(13,31,60,.18);animation:mup .2s ease}
+    .modal.sm{max-width:460px}
+    @keyframes mup{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+    .modal-hd{padding:20px 22px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--surface);z-index:1}
+    .modal-hd h3{font-size:16px;font-weight:700}
+    .modal-hd .sub{font-size:11px;color:var(--sub);margin-top:1px}
+    .modal-x{width:30px;height:30px;border-radius:7px;border:none;cursor:pointer;background:var(--bg);color:var(--sub);display:flex;align-items:center;justify-content:center;transition:all .13s}
+    .modal-x:hover{background:var(--border);color:var(--text)}
+    .modal-bd{padding:20px 22px}
+    .modal-ft{padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;position:sticky;bottom:0;background:var(--surface)}
+
+    /* ── FORMS ───────────────────── */
+    .fg{margin-bottom:14px}
+    .fg label{display:block;font-size:10px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px}
+    .fg label .req{color:var(--red)}
+    .fc{width:100%;padding:9px 12px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);font-family:inherit;font-size:13px;color:var(--text);outline:none;transition:border-color .15s}
+    .fc:focus{border-color:var(--accent);background:#fff}
+    .fc::placeholder{color:var(--sub);opacity:.6}
+    .fr{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .fsec{font-size:10px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.09em;margin:16px 0 10px;padding-bottom:7px;border-bottom:1px solid var(--border)}
+    .fsec:first-child{margin-top:0}
+
+    /* ── DETAIL VIEW ─────────────── */
+    .dg{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .di .dl{font-size:10px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px}
+    .di .dv{font-size:13px;color:var(--text);font-weight:500}
+    .di .dv.em{color:var(--sub)}
+    .info-box{background:var(--bg);border-radius:8px;padding:10px 13px;font-size:12px;color:var(--text);border-left:3px solid var(--accent)}
+
+    /* ── TIMELINE ────────────────── */
+    .tl{display:flex;flex-direction:column}
+    .tl-item{display:flex;gap:11px;padding-bottom:16px;position:relative}
+    .tl-item:not(:last-child)::before{content:'';position:absolute;left:12px;top:26px;bottom:0;width:1.5px;background:var(--border)}
+    .tl-dot{width:25px;height:25px;border-radius:50%;background:var(--accent-soft);border:2px solid var(--accent);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--accent)}
+    .tl-act{font-size:12px;font-weight:600;color:var(--text)}
+    .tl-meta{font-size:10px;color:var(--sub);margin-top:1px}
+    .tl-rem{font-size:11px;color:var(--sub);background:var(--bg);border-radius:6px;padding:5px 9px;margin-top:5px}
+
+    /* ── EMPTY STATE ─────────────── */
+    .empty{text-align:center;padding:52px 20px;display:flex;flex-direction:column;align-items:center;gap:10px}
+    .empty-ico{width:48px;height:48px;background:var(--bg);border-radius:13px;display:flex;align-items:center;justify-content:center;color:var(--sub)}
+    .empty h4{font-size:14px;font-weight:700}
+    .empty p{font-size:12px;color:var(--sub)}
+
+    /* ── SCROLL ──────────────────── */
+    ::-webkit-scrollbar{width:5px;height:5px}
+    ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+  </style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-icon">SP</div>
+    <div class="sb-brand">Sample Portal<small>Requisition System</small></div>
+  </div>
+  <!-- AFTER -->
+  <nav class="sb-nav">
+    <div class="sb-section">Menu</div>
+    {% set back = '/erj' if session.role == 'ERJ' else '/erm' %}
+    <a href="{{ back }}" class="nav-a {% if request.path == back %}on{% endif %}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+        <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+      </svg>
+      Dashboard
+    </a>
+    <!-- <a href="/notifications" class="nav-a {% if request.path == '/notifications' %}on{% endif %}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+      Notifications
+      {% if notif_count %}<span class="nav-badge">{{ notif_count }}</span>{% endif %}
+    </a> -->
+  </nav>
+  <div class="sb-foot">
+    <div class="avatar">{{ initials }}</div>
+    <div class="sb-user">
+      <div class="sb-name">{{ name }}</div>
+      <div class="sb-role">{{ session.role }}</div>
+    </div>
+    <a href="/logout" class="logout" title="Logout">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </a>
+  </div>
+</div>
+
+<div class="main">
+  {% block content %}{% endblock %}
+</div>
+
+<!-- ═══════════════════════════════════════════
+     GLOBAL DETAIL MODAL (both roles)
+════════════════════════════════════════════ -->
+<div class="overlay" id="detailOverlay" onclick="if(event.target===this)closeDetail()">
+  <div class="modal" id="detailModal" style="max-width:720px">
+    <div class="modal-hd">
+      <div>
+        <h3 id="dm-title">Request Detail</h3>
+        <div class="sub" id="dm-sub"></div>
+      </div>
+      <button class="modal-x" onclick="closeDetail()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-bd" id="dm-body">
+      <div style="text-align:center;padding:40px;color:var(--sub)">Loading…</div>
+    </div>
+    <div class="modal-ft" id="dm-foot"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     ERM UPDATE MODAL
+     ERM sets possible_delivery_date → auto Completed
+════════════════════════════════════════════ -->
+<div class="overlay" id="updateOverlay" onclick="if(event.target===this)closeUpdate()">
+  <div class="modal sm">
+    <div class="modal-hd">
+      <div>
+        <h3>Update Request</h3>
+        <div class="sub" id="up-sub"></div>
+      </div>
+      <button class="modal-x" onclick="closeUpdate()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <form id="updateForm" method="post">
+      <div class="modal-bd">
+        <div style="background:var(--accent-soft);border-radius:8px;padding:10px 13px;font-size:12px;color:#1D4ED8;margin-bottom:16px;border-left:3px solid var(--accent)">
+          Setting a <b>Possible Delivery Date</b> will automatically mark this request as <b>Completed</b> and notify the ERJ.
+        </div>
+        <div class="fg">
+          <label>Possible Delivery Date <span class="req">*</span></label>
+          <input class="fc" name="possible_delivery_date" type="date" id="up-pdd" required>
+        </div>
+        <div class="fg">
+          <label>Remark to ERJ</label>
+          <textarea class="fc" name="erm_remark" rows="3" placeholder="Optional remark…" style="resize:vertical"></textarea>
+        </div>
+      </div>
+      <div class="modal-ft">
+        <button type="button" class="btn btn-ghost" onclick="closeUpdate()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save &amp; Mark Completed</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     ERJ EDIT MODAL
+     Allowed for Open and Completed statuses
+════════════════════════════════════════════ -->
+<div class="overlay" id="editOverlay" onclick="if(event.target===this)closeEdit()">
+  <div class="modal">
+    <div class="modal-hd">
+      <div><h3>Edit Request</h3><div class="sub" id="ed-sub"></div></div>
+      <button class="modal-x" onclick="closeEdit()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <form id="editForm" method="post">
+      <div class="modal-bd">
+        <div class="fsec">Customer & Product</div>
+        <div class="fr">
+          <div class="fg"><label>Customer <span class="req">*</span></label><input class="fc" name="customer" id="ef-customer" required></div>
+          <div class="fg"><label>PIC <span class="req">*</span></label><input class="fc" name="pic" id="ef-pic" required></div>
+        </div>
+        <div class="fr">
+          <div class="fg"><label>Model <span class="req">*</span></label><input class="fc" name="model" id="ef-model" required></div>
+          <div class="fg"><label>Mass Production At<span class="req">*</span></label><input class="fc" name="mass_prod" id="ef-mass_prod" required></div>
+        </div>
+
+        <div class="fsec" style="display:flex;justify-content:space-between;align-items:center">
+          <span>Samples</span>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="addSampleRow('editSamples')">+ Add Sample</button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 140px 140px 28px;gap:8px;margin-bottom:4px">
+          <span style="font-size:10px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.07em">Sample <span style="color:var(--red)">*</span><br>[Material_Size_Profile (Kisyu) Color]</span>
+          <span style="font-size:10px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.07em">Quantity <span style="color:var(--red)">*</span></span>
+          <span style="font-size:10px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.07em">Packing Opt <span style="color:var(--red)">*</span></span>
+          <span></span>
+        </div>
+
+        <div id="editSamples"></div>
+
+        <div class="fsec">Order Details</div>
+        <div class="fr">
+          <div class="fg"><label>Price Between ERJ and ERM<span class="req">*</span></label><input class="fc" name="price_between" id="ef-price_between" required></div>
+          <div class="fg"><label>Freight Cost Burden <span class="req">*</span></label><input class="fc" name="freight_cost" id="ef-freight_cost" required></div>
+        </div>
+
+        <div class="fsec">Shipping</div>
+        <div class="fr">
+          <div class="fg"><label>Ship To <span class="req">*</span></label><input class="fc" name="ship_to" id="ef-ship_to" required></div>
+          <div class="fg"><label>Shipping Mode <span class="req">*</span></label><input class="fc" name="ship_mode" id="ef-ship_mode" required></div>
+        </div>
+        <div class="fr">
+          <div class="fg"><label>Shipping Term <span class="req">*</span></label><input class="fc" name="ship_term" id="ef-ship_term" required></div>
+          <div class="fg"><label>Request Delivery Date <span class="req">*</span></label><input class="fc" type="date" name="request_delivery_date" id="ef-request_delivery_date" required></div>
+        </div>
+
+        <div class="fsec">References & Remarks</div>
+        <div class="fr">
+          <div class="fg"><label>Development Request No.</label><input class="fc" name="dev_request_no" id="ef-dev_request_no"></div>
+          <div class="fg">
+            <label>Inspection Report <span class="req">*</span></label>
+            <select class="fc" name="inspection_report" id="ef-inspection_report" required>
+              <option value="" disabled>Select…</option>
+              <option value="Yes">Yes</option>
+              <option value="No">No</option>
+            </select>
+          </div>
+        </div>
+        <div class="fg"><label>Remark</label><textarea class="fc" name="remark" id="ef-remark" rows="2" style="resize:vertical"></textarea></div>
+        <div class="fg"><label>Reason for Edit <span style="color:var(--sub);font-weight:400;text-transform:none;letter-spacing:0">(audit log)</span></label><input class="fc" name="edit_remark" placeholder="e.g. Customer revised quantity"></div>
+      </div>
+      <div class="modal-ft">
+        <button type="button" class="btn btn-ghost" onclick="closeEdit()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     PAGE-SPECIFIC MODALS (injected by child templates)
+════════════════════════════════════════════ -->
+{% block modals %}{% endblock %}
+
+<!-- ═══════════════════════════════════════════
+     SHARED JAVASCRIPT
+════════════════════════════════════════════ -->
+<script>
+// ── MULTI-SAMPLE ROWS ─────────────────────────────────────────
+// Single definition used by both New Request and Edit modals.
+
+function addSampleRow(containerId, data={}) {
+  const wrap = document.getElementById(containerId);
+  const idx  = wrap.querySelectorAll('.sample-row').length;
+  const row  = document.createElement('div');
+  row.className = 'sample-row';
+  row.style.cssText = 'display:grid;grid-template-columns:1fr 140px 140px 28px;gap:8px;align-items:center;margin-bottom:8px';
+  row.innerHTML = `
+    <input class="fc" name="sample_name_${idx}" placeholder="e.g. AL11 19xMT2.50U08 (006) SL00" value="${data.sample_name||''}" required>
+    <input class="fc" name="quantity_${idx}" placeholder="e.g. 100 sets" value="${data.quantity||''}" required>
+    <input class="fc" name="packing_opt_${idx}" placeholder="e.g. Regular" value="${data.packing_opt||''}" required>
+    <button type="button" onclick="removeSampleRow(this, '${containerId}')"
+      style="height:36px;border:none;background:rgba(239,68,68,.1);color:#EF4444;border-radius:7px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0"
+      ${idx===0 ? 'disabled style="opacity:.3;cursor:default"' : ''}>×</button>
+  `;
+  wrap.appendChild(row);
+  reindexRows(containerId);
+}
+
+function removeSampleRow(btn, containerId) {
+  btn.closest('.sample-row').remove();
+  reindexRows(containerId);
+}
+
+function reindexRows(containerId) {
+  document.querySelectorAll(`#${containerId} .sample-row`).forEach((row, i) => {
+    row.querySelectorAll('input').forEach(inp => {
+      inp.name = inp.name.replace(/_\d+$/, `_${i}`);
+    });
+    const btn = row.querySelector('button');
+    if (btn) {
+      btn.disabled      = i === 0;
+      btn.style.opacity = i === 0 ? '.3' : '1';
+      btn.style.cursor  = i === 0 ? 'default' : 'pointer';
+    }
+  });
+}
+
+// ── DETAIL MODAL ──────────────────────────────────────────────
+function openDetail(id) {
+  document.getElementById('detailOverlay').classList.add('show');
+  document.getElementById('dm-body').innerHTML = '<div style="text-align:center;padding:40px;color:var(--sub)">Loading…</div>';
+  document.getElementById('dm-foot').innerHTML = '';
+  fetch('/detail/' + id)
+    .then(r => r.json())
+    .then(data => renderDetail(data));
+}
+function closeDetail() {
+  document.getElementById('detailOverlay').classList.remove('show');
+}
+
+function dv(val) {
+  if (!val || val === 'None') return `<span class="dv em">—</span>`;
+  return `<span class="dv">${val}</span>`;
+}
+
+function statusClass(s) {
+  return {Pending:'b-pending', Open:'b-open', Completed:'b-completed', Closed:'b-closed'}[s] || '';
+}
+
+function renderDetail(data) {
+  const r = data.req, logs = data.logs, role = data.role;
+  document.getElementById('dm-title').textContent  = r.request_no;
+  document.getElementById('dm-sub').textContent    = `Submitted ${r.created_at || '—'}`;
+
+  const pddFmt = r.possible_delivery_date || '—';
+
+  const html = `
+  <div style="display:grid;grid-template-columns:1fr 260px;gap:16px;align-items:start">
+    <div>
+      <div style="background:var(--bg);border-radius:10px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px;border:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="badge ${statusClass(r.status)}" style="font-size:11px;padding:4px 11px">${r.status}</span>
+          <span style="font-size:11px;color:var(--sub)">Assigned: <b style="color:var(--text)">${r.assignee_name||'-'}</b></span>
+        </div>
+        <span style="font-size:11px;color:var(--sub)">Updated: <b style="color:var(--text)">${r.updated_at||'-'}</b></span>
+      </div>
+
+      <div style="font-size:10px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.09em;margin-bottom:10px">Customer & Product</div>
+      <div class="dg" style="margin-bottom:16px">
+        <div class="di"><div class="dl">Customer</div>${dv(r.customer)}</div>
+        <div class="di"><div class="dl">PIC</div>${dv(r.pic)}</div>
+        <div class="di"><div class="dl">Model</div>${dv(r.model)}</div>
+        <div class="di"><div class="dl">Mass Production At</div>${dv(r.mass_prod)}</div>
+      </div>
+
+      ${data.samples && data.samples.length ? `
+      <div style="margin-bottom:16px">
+        <div style="font-size:10px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.09em;margin-bottom:8px">
+          Samples <span style="font-weight:500;color:var(--sub);font-size:10px;text-transform:none;letter-spacing:0">(${data.samples.length} item${data.samples.length > 1 ? 's' : ''})</span>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead>
+            <tr style="background:var(--bg)">
+              <th style="padding:7px 10px;text-align:left;font-size:10px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.07em;border:1px solid var(--border);width:28px">#</th>
+              <th style="padding:7px 10px;text-align:left;font-size:10px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.07em;border:1px solid var(--border)">Sample</th>
+              <th style="padding:7px 10px;text-align:left;font-size:10px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.07em;border:1px solid var(--border);white-space:nowrap">Quantity</th>
+              <th style="padding:7px 10px;text-align:left;font-size:10px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.07em;border:1px solid var(--border);white-space:nowrap">Packing Opt</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${data.samples.map((s, i) => `
+              <tr style="background:${i % 2 === 0 ? '#fff' : 'var(--bg)'}">
+                <td style="padding:8px 10px;border:1px solid var(--border);color:var(--sub);font-weight:600;font-size:11px">${i + 1}</td>
+                <td style="padding:8px 10px;border:1px solid var(--border);font-weight:500;color:var(--text)">${s.sample_name || '—'}</td>
+                <td style="padding:8px 10px;border:1px solid var(--border);font-weight:500;color:var(--text)">${s.quantity || '—'}</td>
+                <td style="padding:8px 10px;border:1px solid var(--border);font-weight:500;color:var(--text)">${s.packing_opt || '—'}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>` : ''}
+
+      <div style="font-size:10px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.09em;margin-bottom:10px">Order Details</div>
+      <div class="dg" style="margin-bottom:16px">
+        <div class="di"><div class="dl">Price Between ERJ and ERM</div>${dv(r.price_between)}</div>
+        <div class="di"><div class="dl">Freight Cost Burden</div>${dv(r.freight_cost)}</div>
+      </div>
+
+      <div style="font-size:10px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.09em;margin-bottom:10px">Shipping</div>
+      <div class="dg" style="margin-bottom:16px">
+        <div class="di"><div class="dl">Ship To</div>${dv(r.ship_to)}</div>
+        <div class="di"><div class="dl">Ship Mode</div>${dv(r.ship_mode)}</div>
+        <div class="di"><div class="dl">Ship Term</div>${dv(r.ship_term)}</div>
+        <div class="di"><div class="dl">Request Delivery Date</div>${dv(r.request_delivery_date)}</div>
+        <div class="di"><div class="dl">Possible Delivery Date</div>
+          <span class="dv" style="${r.possible_delivery_date && r.possible_delivery_date!=='None' ? 'color:var(--green);font-weight:700' : ''}">${pddFmt}</span>
+        </div>
+      </div>
+
+      <div style="font-size:10px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.09em;margin-bottom:10px">References</div>
+      <div class="dg" style="margin-bottom:${r.remark ? '12px' : '0'}">
+        <div class="di"><div class="dl">Development Request No.</div>${dv(r.dev_request_no)}</div>
+        <div class="di"><div class="dl">Inspection Report</div>${dv(r.inspection_report)}</div>
+      </div>
+      ${r.remark && r.remark !== 'None' ? `<div class="info-box" style="margin-top:4px"><b style="font-size:10px;color:var(--sub);text-transform:uppercase;letter-spacing:.07em">Remark</b><br>${r.remark}</div>` : ''}
+    </div>
+    <div>
+      <div style="font-size:11px;font-weight:700;margin-bottom:14px">Activity Log</div>
+      <div class="tl">
+        ${logs.length ? logs.map(l => `
+          <div class="tl-item">
+            <div class="tl-dot">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div style="flex:1">
+              <div class="tl-act">${l.action}</div>
+              <div class="tl-meta">by ${l.actor||'System'} · ${l.created_at||''}</div>
+              ${l.remarks ? `<div class="tl-rem">${l.remarks}</div>` : ''}
+            </div>
+          </div>`).join('') : '<p style="font-size:12px;color:var(--sub)">No activity yet.</p>'}
+      </div>
+    </div>
+  </div>`;
+
+  document.getElementById('dm-body').innerHTML = html;
+
+  let foot = '';
+  if (role === 'ERM' && r.status === 'Open') {
+    foot += `<button class="btn btn-primary" onclick="closeDetail();openUpdate(${r.id},'${r.request_no}','${r.possible_delivery_date_raw||''}')">Set Delivery Date</button>`;
+  }
+  if (role === 'ERJ' && r.requester_id === data.my_id && (r.status === 'Open' || r.status === 'Completed')) {
+    foot += `<button class="btn btn-warn" style="margin-right:auto" onclick="closeDetail();openEdit(${r.id},'${r.request_no}')">Edit Request</button>`;
+    if (r.status === 'Completed') {
+      foot += `<button class="btn btn-success" onclick="closeDetail();openCloseFromDetail(${r.id},'${r.request_no}')">Close Request</button>`;
+    }
+  }
+  foot += `<button class="btn btn-ghost" onclick="closeDetail()">Close</button>`;
+  document.getElementById('dm-foot').innerHTML = foot;
+}
+
+// ── UPDATE MODAL ──────────────────────────────────────────────
+function openUpdate(id, rno, pdd) {
+  document.getElementById('up-sub').textContent  = rno;
+  document.getElementById('updateForm').action   = '/erm/update/' + id;
+  document.getElementById('up-pdd').value        = pdd || '';
+  document.getElementById('updateOverlay').classList.add('show');
+}
+function closeUpdate() {
+  document.getElementById('updateOverlay').classList.remove('show');
+}
+
+// ── EDIT MODAL ────────────────────────────────────────────────
+function openEdit(id, rno) {
+  document.getElementById('ed-sub').textContent = rno;
+  document.getElementById('editForm').action    = '/erj/edit/' + id;
+
+  // Clear sample rows before fetching fresh data
+  document.getElementById('editSamples').innerHTML = '';
+
+  fetch('/detail/' + id)
+    .then(r => r.json())
+    .then(data => {
+      const r = data.req;
+
+      // Populate simple fields
+      ['customer','pic','model','mass_prod','price_between','freight_cost',
+       'ship_to','ship_mode','ship_term','dev_request_no','remark'].forEach(k => {
+        const el = document.getElementById('ef-' + k);
+        if (el) el.value = (r[k] && r[k] !== 'None') ? r[k] : '';
+      });
+
+      // Inspection report dropdown
+      const irEl = document.getElementById('ef-inspection_report');
+      if (irEl) irEl.value = (r.inspection_report && r.inspection_report !== 'None') ? r.inspection_report : '';
+
+      // Date field
+      const rdEl = document.getElementById('ef-request_delivery_date');
+      if (rdEl) rdEl.value = r.request_delivery_date_raw || '';
+
+      // Load sample rows (multi-sample)
+      const items = data.samples || [];
+      if (items.length) {
+        items.forEach(item => addSampleRow('editSamples', item));
+      } else {
+        addSampleRow('editSamples');
+      }
+    });
+
+  document.getElementById('editOverlay').classList.add('show');
+}
+function closeEdit() {
+  document.getElementById('editOverlay').classList.remove('show');
+}
+
+// ── CLOSE FROM DETAIL (calls openClose defined in erj.html) ───
+function openCloseFromDetail(id, rno) {
+  if (typeof openClose === 'function') openClose(id, rno);
+}
+
+// ── KEYBOARD CLOSE ────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeDetail(); closeUpdate(); closeEdit(); }
+});
+</script>
+
+<!-- Page-specific scripts injected by child templates -->
+{% block scripts %}{% endblock %}
+
+</body>
+</html>

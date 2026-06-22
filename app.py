@@ -6,18 +6,18 @@ from email.mime.text import MIMEText
 from flask import Flask, render_template, request, redirect, session, jsonify
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'sp_secret_2025')
+app.secret_key = os.environ.get('', '')
 
 DB_HOST = "localhost"
 DB_USER = "root"
-DB_PASS = "ERMsql999$"
+DB_PASS = ""
 DB_NAME = "sample_portal"
 
-SMTP_HOST = "mail.excel-rim.com"
+SMTP_HOST = "mail.example.com"
 SMTP_PORT = 587
-SMTP_USER = "esystem@excel-rim.com"        
-SMTP_PASS = "Ersystem@2024$$"
-SYSTEM_LINK = "http://192.168.110.99:921/"
+SMTP_USER = "example@example.com"        
+SMTP_PASS = ""
+SYSTEM_LINK = "#"
 
 
 # ─────────────────────────────────────────
@@ -603,4 +603,4 @@ def api_unread():
     return jsonify(count=get_unread(uid))
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=8000, debug=True)

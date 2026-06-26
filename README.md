@@ -129,6 +129,6 @@ Emails are sent silently — failures are logged to console but do not interrupt
 
 ---
 
-## License
+## Author
 
 Nur Athirah
